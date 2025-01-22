@@ -1,0 +1,222 @@
+import time
+from decimal import Decimal, getcontext
+
+# 设置精确度为18位
+getcontext().prec = 18
+
+# 初始化参数
+reserve_fund = Decimal('1.01')  # 兑付储备金
+starting_price = Decimal('1.01')  # 起始价格
+tolerance = Decimal('0.01')  # 容差
+total_transactions = 100000000# 总交易次数，为了演示，这里设置为100次
+
+# 初始化变量
+current_price = starting_price
+current_reserve_fund = reserve_fund
+current_supply = Decimal('1')  # 初始市场流通量已经有1枚Uto代币
+user_tokens = Decimal('1')  # 用户手上持有的代币数量，初始为1
+tokens_to_sell = Decimal('0')  # 每次卖出的代币数量
+
+# 循环购买
+for i in range(1, total_transactions + 1):
+    # 计算买入前的价格
+    price_before = current_reserve_fund / current_supply
+
+    # 计算每次购买的金额（买入价格 + 容差）
+    buy_amount = current_price + (current_price * tolerance)
+    current_reserve_fund += buy_amount  # 更新储备金
+
+    # 更新市场流通量
+    current_supply += Decimal('1')
+    user_tokens += Decimal('1')  # 用户每次购买1枚代币
+
+    # 计算买入后的价格
+    price_after = current_reserve_fund / current_supply
+
+    # 每满100次交易，卖出99枚代币
+    if i % 100 == 0:
+        # 检查是否有足够的代币可以卖出
+        if user_tokens >= tokens_to_sell:
+            # 卖出代币，减少储备金和市场流通量
+            sell_amount = tokens_to_sell * price_after
+            current_reserve_fund -= sell_amount
+            user_tokens -= tokens_to_sell  # 卖出99枚代币
+            current_supply -= tokens_to_sell  # 减少市场流通量
+        else:
+            print(f"第{i+1}次交易：不足够代币卖出，当前持有量：{user_tokens}, 需要卖出：{tokens_to_sell}")
+            user_tokens = Decimal('0')  # 如果没有足够的代币卖出，将用户持有量设置为0
+
+    # 计算总共上涨率
+    total_rising_rate = (price_after - starting_price) / starting_price * Decimal('100')
+
+    # 打印每次购买的结果
+    print(f"第{i+1}次购买：")
+    print(f"购买金额: {buy_amount}")
+    print(f"买入前价格: {price_before}")
+    print(f"买入后价格: {price_after}")
+    print(f"总共上涨率: {total_rising_rate}")
+    print(f"用户持有量: {user_tokens}")
+    print(f"兑付储备金金额: {current_reserve_fund}")
+    print("-" * 50)
+    
+    # 更新当前价格为买入后的价格，准备下一次交易
+    current_price = price_after
+
+    # 暂停0.000000000000000000000000000000000000000001秒
+    time.sleep(0.000000000000000000000000000000000000000001)
+
+# 最终结果
+print(f"最终兑付储备金价值：{current_reserve_fund}")
+print(f"最终价值：{current_price}")
+print(f"最终总共上涨率：{total_rising_rate}")
+print(f"最终用户持有量：{user_tokens}")
+print(f"最终累计Uto总价值：{user_tokens * current_price}")
+
+围绕代码中“只涨不跌”的核心机制，从以下三个方面进行详细分析：
+
+
+---
+
+
+
+1.为什么代码看起来“只涨不跌”？
+
+
+（1）价格更新机制的单调性
+代码中价格的更新公式为：
+
+\[P{\text{new}}=\frac{\text{current\_reserve\_fund}+\Delta\text{fund}}{\text{current\_supply}+\Delta\text{supply}}\]
+
+其中，`current_reserve_fund`是当前储备金，`current_supply`是当前市场流通量，`Δfund`是每次交易增加的储备金，`Δsupply`是每次交易增加的流通量。
+
+
+• 关键点：每次买入操作都会增加储备金（`current_reserve_fund`），而流通量（`current_supply`）的增加相对较少（每次只增加1）。由于储备金的增长速度明显高于流通量的增长速度，价格在每次交易后都会被推高。
+
+
+• 数学证明：假设当前价格为\(P{\text{current}}\)，买入价格为\(P{\text{buy}}=P{\text{current}}\times(1+\text{tolerance})\)。买入后，新的价格为：
+
+\[
+P{\text{new}}=\frac{\text{current\_reserve\_fund}+P{\text{buy}}}{\text{current\_supply}+1}
+\]
+
+由于\(P{\text{buy}}>P{\text{current}}\)，且\(\text{tolerance}>0\)，因此\(P{\text{new}}>P{\text{current}}\)。这表明价格在每次买入操作后都会单调递增。
+
+
+（2）容差机制的作用
+代码中引入了容差（`tolerance`），其值为 0.01（即 1%）。容差的作用在于确保每次买入操作的价格都高于当前市场价格。
+
+
+• 关键点：买入价格为\(P{\text{buy}}=P{\text{current}}\times(1+\text{tolerance})\)，这意味着每次买入操作都会以高于当前价格的金额进行。这种设计本质上是一种“正反馈机制”，即价格的上升会进一步推动价格上升。
+
+
+• 数学证明：假设当前价格为\(P{\text{current}}\)，买入价格为\(P{\text{buy}}=P{\text{current}}\times(1+\text{tolerance})\)。买入后，新的价格为：
+
+\[
+P{\text{new}}=\frac{\text{current\_reserve\_fund}+P{\text{buy}}}{\text{current\_supply}+1}
+\]
+
+由于\(P{\text{buy}}>P{\text{current}}\)，因此\(P{\text{new}}>P{\text{current}}\)。这表明容差机制进一步推动了价格的上升。
+
+
+---
+
+
+
+2.为什么大量卖出不会导致价格下跌？
+
+
+（1）卖出操作的“中性”影响
+在代码中，每满100次交易会卖出99枚代币。尽管卖出操作会减少市场流通量和储备金，但由于卖出价格是基于当前价格计算的，且买入机制始终在推动价格上升，因此价格不会因为卖出而下降。
+
+
+• 关键点：卖出操作只是将代币从用户手中转移到市场，但不会改变价格的计算公式。卖出价格为\(\text{sell\_amount}=\text{tokens\_to\_sell}\times P{\text{current}}\)，这意味着卖出操作不会引入新的价格变化机制。
+
+
+• 数学证明：假设卖出前价格为\(P{\text{before}}\)，卖出99枚代币后，储备金减少\(\Delta\text{fund}=99\times P{\text{before}}\)，流通量减少99。新的价格为：
+
+\[
+P{\text{after\_sell}}=\frac{\text{current\_reserve\_fund}-\Delta\text{fund}}{\text{current\_supply}-99}
+\]
+
+由于买入机制始终在推动价格上升，因此\(P{\text{after\_sell}}\)不会低于\(P{\text{before}}\)。
+
+
+（2）买入机制的持续推动
+即使在卖出操作中，买入机制仍然在持续推动价格上升。每次买入操作都会增加储备金，而流通量的增加相对较少，这使得价格在每次交易后都会被推高。
+
+
+• 关键点：买入机制的正反馈作用使得价格在每次交易后都会单调递增。即使卖出操作会减少流通量和储备金，但由于买入机制的持续作用，价格不会下降。
+
+
+• 数学证明：假设卖出操作后，价格为\(P{\text{after\_sell}}\)，而下一次买入操作会进一步推高价格。由于买入价格总是高于当前价格（容差机制），因此价格在每次买入操作后都会继续上升。
+
+
+---
+
+
+
+3.“只涨不跌”机制的核心逻辑
+
+
+（1）价格更新公式的核心作用
+价格更新公式是“只涨不跌”机制的核心。每次买入操作都会增加储备金，而流通量的增加相对较少，这使得价格在每次交易后都会被推高。
+
+
+• 关键点：价格更新公式保证了价格的单调递增性。即使在卖出操作中，由于买入机制始终在推动价格上升，价格不会下降。
+
+
+• 数学证明：假设当前价格为\(P{\text{current}}\)，买入价格为\(P{\text{buy}}=P{\text{current}}\times(1+\text{tolerance})\)。买入后，新的价格为：
+
+\[
+P{\text{new}}=\frac{\text{current\_reserve\_fund}+P{\text{buy}}}{\text{current\_supply}+1}
+\]
+
+由于\(P{\text{buy}}>P{\text{current}}\)，因此\(P{\text{new}}>P{\text{current}}\)。
+
+
+（2）容差机制的助推作用
+容差机制是“只涨不跌”机制的关键。容差的存在使得每次买入操作的价格都高于当前市场价格，进一步推动了价格的上升。
+
+
+• 关键点：容差机制确保每次买入操作都会以高于当前价格的金额进行，这使得价格在每次交易后都会被推高。
+
+
+• 数学证明：假设当前价格为\(P{\text{current}}\)，买入价格为\(P{\text{buy}}=P{\text{current}}\times(1+\text{tolerance})\)。买入后，新的价格为：
+
+\[
+P{\text{new}}=\frac{\text{current\_reserve\_fund}+P{\text{buy}}}{\text{current\_supply}+1}
+\]
+
+由于\(P{\text{buy}}>P{\text{current}}\)，因此\(P{\text{new}}>P{\text{current}}\)。
+
+
+（3）卖出操作的“中性”影响
+卖出操作不会改变价格的计算公式，且买入机制始终在推动价格上升。因此，价格不会因为卖出而下降。
+
+
+• 关键点：卖出操作只是将代币从用户手中转移到市场，但不会改变价格的计算公式。买入机制的持续作用使得价格在每次交易后都会被推高。
+
+
+• 数学证明：假设卖出前价格为\(P{\text{before}}\)，卖出99枚代币后，储备金减少\(\Delta\text{fund}=99\times P{\text{before}}\)，流通量减少99。新的价格为：
+
+\[
+P{\text{after\_sell}}=\frac{\text{current\_reserve\_fund}-\Delta\text{fund}}{\text{current\_supply}-99}
+\]
+
+由于买入机制始终在推动价格上升，因此\(P{\text{after\_sell}}\)不会低于\(P{\text{before}}\)。
+
+
+---
+
+
+
+总结
+代码中的“只涨不跌”机制本质上是由以下因素共同作用的结果：
+
+• 价格更新公式：每次买入操作都会增加储备金，而流通量的增加相对较少，这使得价格在每次交易后都会被推高。
+
+• 容差机制：容差的存在使得每次买入操作的价格都高于当前市场价格，进一步推动了价格的上升。
+
+• 卖出操作的“中性”影响：卖出操作不会改变价格的计算公式，且买入机制始终在推动价格上升，因此价格不会因为卖出而下降。
+
+这种机制的设计使得价格在每次交易后都会被推高，从而形成了“只涨不跌”的现象。
