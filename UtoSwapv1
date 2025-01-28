@@ -108,7 +108,7 @@ https://docs.uniswap.org/concepts/protocol/oracle
 
 用户可以向对付储备金池子输入代币数量(建议添加99.9%)(场外没有币)
 
-添加LP流动性(初始价格相同)(默认权限直接锁黑洞)
+添加LP流动性(初始价格相同)(默认权限直接锁黑洞)恒定乘积公式\[ x \times y = k \]
 
 设置(买入和卖出回流百分比 )范围是从最低值精确到18位小数，到最高值5%。
 
@@ -119,149 +119,9 @@ https://docs.uniswap.org/concepts/protocol/oracle
 
 对付储备金池÷全网用户持有流通数量包含LP池子里面代币、不含主代币池、不含黑洞地址+每枚代币动态容差)=买入的价格
 
-
 对付储备金池÷全网用户持有流通数量包含LP池子里面代币、不含主代币池、不含黑洞地址=卖出的价格
-根据您的描述和搜索结果，以下是关于买入资金权重和卖出资金权重的计算公式，以及LP流动池和储备金池的资金分配机制的整理：
 
-
-买入和卖出资金权重的计算
-在DeFi流动性池中，资金权重的分配通常基于LP流动池和储备金池中的资产比例。权重的计算公式可以参考以下逻辑：
-
-
-买入资金权重
-当用户买入时，资金会按照LP流动池和储备金池的资产比例分配。权重计算公式为：
-
-• LP流动池权重：
-\[
-\text{LP Pool Weight}=\frac{\text{LP Pool Assets}}{\text{LP Pool Assets}+\text{Reserve Pool Assets}}
-\]
-
-• 储备金池权重：
-\[
-\text{Reserve Pool Weight}=\frac{\text{Reserve Pool Assets}}{\text{LP Pool Assets}+\text{Reserve Pool Assets}}
-\]
-
-其中，LP Pool Assets表示LP流动池中的资产价值，Reserve Pool Assets表示储备金池中的资产价值。
-
-
-卖出资金权重
-卖出时的资金分配权重与买入时相同，也根据LP流动池和储备金池的资产比例计算。
-
-
-资金分配机制
-在买入或卖出时，资金会根据上述权重分配到LP流动池和储备金池：
-
-• 买入资金分配：
-
-• 分配到LP流动池的资金=买入资金×LP流动池权重
-
-• 分配到储备金池的资金=买入资金×储备金池权重
-
-
-• 卖出资金分配：
-
-• 从LP流动池提取的资金=卖出资金×LP流动池权重
-
-• 从储备金池提取的资金=卖出资金×储备金池权重。
-
-
-应用场景
-这种机制广泛应用于流动性引导池（LBP）和自动做市商（AMM）模型中。通过动态调整LP流动池和储备金池的资金分配，可以优化交易效率，减少滑点，并灵活应对市场变化。
-
-
-1.权重比计算公式
-权重比（Weight Ratio）是通过比较LP流动池中的代币数量与代币池中的代币数量来计算的。公式如下：
-
-权重比=LP流动池代币数量/代币池代币数量
-
-用数学公式表示为：
-
-\(\text{Weight Ratio}=\frac{\text{LP Pool Tokens}}{\text{Token Pool Tokens}}\)
-
-
-公式解释
-
-• LP Pool Tokens：LP流动池中的代币数量。这个数量会随着交易的变化而动态更新。
-
-• Token Pool Tokens：代币池中的代币数量。这个数量也会随着交易的变化而动态更新。
-
-• 权重比：表示LP流动池与代币池之间的相对比例。权重比越高，说明LP流动池在整体中的占比越大；权重比越低，则说明代币池的占比更大。
-
-
-2.动态变化的公式
-在每次交易中，代币池和LP流动池的代币数量会根据交易量（Transaction Amount）增加或减少。具体公式如下：
-
-
-增加代币
-
-• 代币池更新公式：
-\(\text{Token Pool Tokens}{\text{new}}=\text{Token Pool Tokens}{\text{old}}+\text{Transaction Amount}\)
-
-
-• LP流动池更新公式：
-\(\text{LP Pool Tokens}{\text{new}}=\text{LP Pool Tokens}{\text{old}}+\text{Transaction Amount}\)
-
-
-减少代币
-
-• 代币池更新公式：
-\(\text{Token Pool Tokens}{\text{new}}=\text{Token Pool Tokens}{\text{old}}-\text{Transaction Amount}\)
-
-
-• LP流动池更新公式：
-\(\text{LP Pool Tokens}{\text{new}}=\text{LP Pool Tokens}{\text{old}}-\text{Transaction Amount}\)
-
-
-3.权重比的动态变化
-每次交易后，权重比会根据新的代币数量重新计算。新的权重比公式为：
-
-\(\text{New Weight Ratio}=\frac{\text{LP Pool Tokens}{\text{new}}}{\text{Token Pool Tokens}{\text{new}}}\)
-
-
-4.特殊情况处理
-
-• 如果代币池中的代币数量为0（即\(\text{Token Pool Tokens}=0\)），为了避免除以零的错误，权重比可以定义为无穷大（\(\infty\)）。
-
-• 如果LP流动池中的代币数量为0，权重比为0。
-
-
-5.公式总结
-以下是完整的公式总结：
-
-
-• 权重比公式：
-\[
-\text{Weight Ratio}=\frac{\text{LP Pool Tokens}}{\text{Token Pool Tokens}}
-\]
-
-
-• 增加代币时的更新公式：
-\[
-\text{Token Pool Tokens}{\text{new}}=\text{Token Pool Tokens}{\text{old}}+\text{Transaction Amount}
-\]
-\[
-\text{LP Pool Tokens}{\text{new}}=\text{LP Pool Tokens}{\text{old}}+\text{Transaction Amount}
-\]
-
-
-• 减少代币时的更新公式：
-\[
-\text{Token Pool Tokens}{\text{new}}=\text{Token Pool Tokens}{\text{old}}-\text{Transaction Amount}
-\]
-\[
-\text{LP Pool Tokens}{\text{new}}=\text{LP Pool Tokens}{\text{old}}-\text{Transaction Amount}
-\]
-
-
-• 特殊情况：
-
-• 如果\(\text{Token Pool Tokens}=0\)，则\(\text{Weight Ratio}=\infty\)。
-
-• 如果\(\text{LP Pool Tokens}=0\)，则\(\text{Weight Ratio}=0\)。
-
-
-6.应用场景
-这些公式可以用于模拟流动性引导池（LBP）或类似的动态权重机制。通过动态调整权重比，可以根据交易量的变化灵活地控制两个池子之间的比例关系，从而实现更灵活的流动性管理和交易机制。
+计算LP流动池和储备金池、代币池权重来决定价值、和买入的资金流向。卖出的资金流向。来确定最终买入价和卖出价。（具体公式未知）
 
 市值计算方式
 1.确定流通代币数量：
